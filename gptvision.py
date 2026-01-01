@@ -44,15 +44,27 @@ class GPTVisionAnalyzer:
             '''你會收到兩張圖片：
 1. 第一張是「原始對照圖」，代表物體原本應該長什麼樣子。
 2. 第二張是「目前畫面」，代表要檢查的現況。
-請比較兩張圖中的物體（杯子）是否一致，並根據以下規則回覆：
-- 如果第二張圖中杯子完全不見，只剩白色底，回覆 "stolen"
-- 如果第二張圖中仍然是原本的杯子且未被更換，回覆 "ok"
-- 如果第二張圖中出現了別的杯子或被替換過，回覆 "replaced"
-只輸出以上三種字串之一，不要輸出任何其他內容。
+請比較兩張圖中的物體是否一致，並根據以下規則回覆json：
+- **stolen**: 如果原本的物品消失了，且原本的位置變空了（只剩下背景）。
+- **replaced**: 如果原本的物品消失了，但在該位置出現了「完全不同的物體」（例如不同的杯子、飲料罐、水果等）。
+- **ok**: 如果原本的物品還在原本的位置（即使稍微被移動，只要確認是同一個杯子）。
+以下為json格式範例：
+{
+  "status": "stolen" | "replaced" | "ok",
+  "new_object_description": "如果不見或正常填 null，如果是被替換，請描述新物體",
+  "danger_level": "low" | "medium" | "high",
+  "reason": "簡短說明判斷理由"
+}
+注意：
+1.如果在第二張圖中看到人類的手或身體的一部分，請判斷物體是否還在。如果手拿著物品懸空，請視為「stolen」（被拿走中）。
+2.如果ok的情況下，請進一步檢查物體是否破損，依照破損程度回應danger_level
+3.如果畫面中有「人」或「手」，在reason加以描述是否有戴手套、相關特徵、是否持有其他工具等
+
 '''
         )
         #對照圖
-        with open("D:/my program/LLM/original.jpg", "rb") as f:
+        with open("wallet.jpg", "rb") as f:
+        # with open("original.jpg", "rb") as f:
             original_image_data = f.read()
             base64_original = base64.b64encode(original_image_data).decode('utf-8')
         # 編碼影像
